@@ -19,7 +19,7 @@ app = FastAPI(
 # Metricas de negocio y sistema
 
 WORKOUT_COUNTER = Counter(
-    "fitness_workout_total",
+    "fitness_workouts_total",
     "Total de sesiones de entrenamiento registradas",
     ["workout_type"],
 )
