@@ -1,0 +1,15 @@
+services:
+  fitness-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: ops_fitness_api
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true  
+
+
+
+
