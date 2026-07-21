@@ -17,8 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Invalidation Layer Optimization: Dependencias primero
 COPY src/requirements.txt .
 
+# 1. Actualiza pip, setuptools y wheel a nivel del sistema base
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# 2. Instala tus dependencias redirigiendo la salida a /install
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --prefix=/install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 
