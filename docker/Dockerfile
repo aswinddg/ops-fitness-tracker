@@ -1,32 +1,33 @@
 # syntax=docker/dockerfile:1.7
 
 # ==========================================
-# STAGE 1: Builder (Compilación y Pip Install)
+# STAGE 1: Builder
 # ==========================================
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Invalidation Layer Optimization: Dependencias primero
+RUN python -m venv "${VIRTUAL_ENV}"
+
 COPY src/requirements.txt .
 
-# 1. Actualiza pip, setuptools y wheel a nivel del sistema base
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# 2. Instala tus dependencias redirigiendo la salida a /install
+# Actualiza herramientas y resuelve dependencias runtime
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt
+    python -m pip install --upgrade pip setuptools wheel && \
+    python -m pip install --no-cache-dir --upgrade -r requirements.txt
 
 
 # ==========================================
-# STAGE 2: Runtime (Hardened & Minimal)
+# STAGE 2: Runtime
 # ==========================================
 FROM python:3.11-slim AS final
 
@@ -34,26 +35,28 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/app/.local/bin:${PATH}" \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:${PATH}" \
     PYTHONPATH="/app/src"
 
-# Principio de Menor Privilegio (Non-root user estático)
-RUN groupadd -g 10001 appgroup && \
-    useradd -u 10001 -g appgroup -s /bin/sh -m appuser && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+# Actualiza paquetes incluidos en la imagen base.
+# Esto corrige wheel y el contenido vendorizado de setuptools,
+# siempre que PyPI disponga de versiones corregidas.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+    && python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && groupadd -g 10001 appgroup \
+    && useradd -u 10001 -g appgroup -s /bin/sh -m appuser \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar paquetes compilados y código fuente asignando owner explícito
-COPY --from=builder --chown=appuser:appgroup /install /usr/local
+COPY --from=builder --chown=appuser:appgroup /opt/venv /opt/venv
 COPY --chown=appuser:appgroup src/ /app/src/
 
 USER 10001:10001
 
 EXPOSE 8000
 
-# Probe interna de salud
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/healthz || exit 1
+    CMD curl -f http://localhost:8000/healthz || exit 1
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
