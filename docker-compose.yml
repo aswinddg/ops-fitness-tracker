@@ -9,7 +9,20 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true  
+  # Integración del Healthcheck configurado en el Dockerfile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # Persistencia para almacenamiento de logs o volumen de datos locales
+    volumes:
+      - api_data:/app/data
 
+volumes:
+  api_data:
+    driver: local
 
 
 
