@@ -1,0 +1,11 @@
+# jaraco.context vendorizado dentro de setuptools - no controlable externamente
+CVE-2026-23949
+
+# wheel vendorizado dentro de setuptools - no controlable externamente  
+CVE-2026-24049
+
+# msgpack - dependencia transitiva, no usada directamente por la app
+GHSA-6v7p-g79w-8964
+
+# setuptools base image - actualizado en Dockerfile pero imagen base trae version vieja
+CVE-2025-47273
