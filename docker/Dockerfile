@@ -20,10 +20,9 @@ RUN python -m venv "${VIRTUAL_ENV}"
 
 COPY src/requirements.txt .
 
-# Actualiza herramientas y resuelve dependencias runtime
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python -m pip install --upgrade pip setuptools wheel && \
-    python -m pip install --no-cache-dir --upgrade -r requirements.txt
+    pip install --upgrade pip setuptools==78.1.1 wheel==0.47.0 && \
+    pip install --no-cache-dir --upgrade -r requirements.txt
 
 
 # ==========================================
@@ -39,12 +38,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:${PATH}" \
     PYTHONPATH="/app/src"
 
-# Actualiza paquetes incluidos en la imagen base.
-# Esto corrige wheel y el contenido vendorizado de setuptools,
-# siempre que PyPI disponga de versiones corregidas.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
-    && python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && python -m pip install --no-cache-dir --upgrade pip setuptools==78.1.1 wheel==0.47.0 \
     && groupadd -g 10001 appgroup \
     && useradd -u 10001 -g appgroup -s /bin/sh -m appuser \
     && rm -rf /var/lib/apt/lists/*
