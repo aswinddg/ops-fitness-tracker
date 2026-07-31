@@ -1,3 +1,4 @@
+import time
 from fastapi import FastAPI, Response, status
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
@@ -30,6 +31,18 @@ REQUEST_LATENCY = Histogram(
     ['endpoint'],
 )
 
+@app.middleware("http")
+async def measure_request_latency(request, call_next):
+    """Mide la duración de cada petición HTTP por endpoint."""
+    start_time = time.perf_counter()
+
+    response = await call_next(request)
+
+    elapsed_time = time.perf_counter() - start_time
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(elapsed_time)
+
+    return response
+
 @app.get("/", status_code=status.HTTP_200_OK)
 def read_root():
     return {
@@ -51,7 +64,7 @@ def metrics():
     """Scrape endpoint para Prometheus"""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-@app.post("api/v1/workouts", status_code=status.HTTP_201_CREATED)
+@app.post("/api/v1/workouts", status_code=status.HTTP_201_CREATED)
 def record_workout(workout_type: str = "Running"):
     """Registra una nueva sesion de entrenamiento"""
     WORKOUT_COUNTER.labels(workout_type=workout_type).inc()
