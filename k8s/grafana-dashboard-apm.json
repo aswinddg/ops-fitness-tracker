@@ -1,0 +1,204 @@
+{
+    "__inputs": [],
+    "__requires": [],
+    "annotations": { "list": [] },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 50 },
+                { "color": "red", "value": 100 }
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "id": 1,
+        "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+        "title": "Total Workouts Registrados",
+        "type": "stat",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "sum(fitness_workouts_total)",
+            "legendFormat": "Total"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 10 }
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "id": 2,
+        "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+        "title": "Peticiones por Segundo (RPS)",
+        "type": "stat",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "sum(rate(http_request_duration_seconds_count[1m]))",
+            "legendFormat": "RPS"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 0.5 },
+                { "color": "red", "value": 1 }
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "id": 3,
+        "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+        "title": "Latencia P95",
+        "type": "stat",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 1 },
+                { "color": "red", "value": 5 }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+        "id": 4,
+        "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+        "title": "Workouts por Tipo",
+        "type": "stat",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "sum by (workout_type) (fitness_workouts_total)",
+            "legendFormat": "{{workout_type}}"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" },
+          "overrides": []
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "id": 5,
+        "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+        "title": "Tasa de Peticiones por Endpoint",
+        "type": "timeseries",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "sum by (endpoint) (rate(http_request_duration_seconds_count[1m]))",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" },
+          "overrides": []
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "id": 6,
+        "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+        "title": "Latencia P50 / P95 / P99",
+        "type": "timeseries",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          },
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P99"
+          }
+        ]
+      },
+      {
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" },
+          "overrides": []
+        },
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+        "id": 7,
+        "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right" }, "tooltip": { "mode": "multi" } },
+        "title": "Workouts Registrados por Tipo (Acumulado)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "expr": "sum by (workout_type) (fitness_workouts_total)",
+            "legendFormat": "{{workout_type}}"
+          }
+        ]
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "tags": ["fitness", "apm", "devops"],
+    "time": { "from": "now-1h", "to": "now" },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Ops Fitness Tracker - APM",
+    "uid": "ops-fitness-apm",
+    "version": 1
+  }

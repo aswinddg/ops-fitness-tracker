@@ -12,6 +12,9 @@ data:
         metrics_path: '/metrics'
         static_configs:
           - targets: ['ops-fitness-service:80']
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']    
 ---
 apiVersion: apps/v1
 kind: Deployment
