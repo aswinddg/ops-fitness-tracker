@@ -1,11 +1,12 @@
 import time
 from fastapi import FastAPI, Response, status
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from src.middleware import StructuredLoggingMiddleware
 
 app = FastAPI(
     title="Ops Fitness Core API",
     description="API for the Ops Fitness Core",
-    version="1.0.0",
+    version="1.1.0",
     contact={
         "name": "Ops Fitness",
         "url": "https://www.ops-fitness.com",
@@ -43,6 +44,9 @@ async def measure_request_latency(request, call_next):
 
     return response
 
+# ✅ Registrar el middleware de logging estructurado DESPUÉS de métricas
+app.add_middleware(StructuredLoggingMiddleware)
+
 @app.get("/", status_code=status.HTTP_200_OK)
 def read_root():
     return {
@@ -72,45 +76,3 @@ def record_workout(workout_type: str = "Running"):
         "message": "Sesion de entrenamiento registrada exitosamente",
         "workout_type": workout_type
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
