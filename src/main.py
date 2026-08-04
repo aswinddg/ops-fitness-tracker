@@ -6,7 +6,7 @@ from src.middleware import StructuredLoggingMiddleware
 app = FastAPI(
     title="Ops Fitness Core API",
     description="API for the Ops Fitness Core",
-    version="1..0",
+    version="1.1.0",
     contact={
         "name": "Ops Fitness",
         "url": "https://www.ops-fitness.com",
