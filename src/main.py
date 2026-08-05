@@ -1,7 +1,12 @@
 import time
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, Response, status, Depends
+from sqlalchemy.orm import Session
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from src.middleware import StructuredLoggingMiddleware
+from src.database import engine, get_db, Base
+from src.models import Workout as WorkoutModel
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Ops Fitness Core API",
@@ -17,8 +22,6 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
-
-# Metricas de negocio y sistema
 
 WORKOUT_COUNTER = Counter(
     "fitness_workouts_total",
@@ -36,15 +39,11 @@ REQUEST_LATENCY = Histogram(
 async def measure_request_latency(request, call_next):
     """Mide la duración de cada petición HTTP por endpoint."""
     start_time = time.perf_counter()
-
     response = await call_next(request)
-
     elapsed_time = time.perf_counter() - start_time
     REQUEST_LATENCY.labels(endpoint=request.url.path).observe(elapsed_time)
-
     return response
 
-# ✅ Registrar el middleware de logging estructurado DESPUÉS de métricas
 app.add_middleware(StructuredLoggingMiddleware)
 
 @app.get("/", status_code=status.HTTP_200_OK)
@@ -57,22 +56,26 @@ def read_root():
 
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 def health_check():
-    """Liveliness probe para orquestadores como EKS"""
     return {
         "status": "healthy",
-        "service": "ops-fitness-core"    
+        "service": "ops-fitness-core"
     }
 
 @app.get("/metrics")
 def metrics():
-    """Scrape endpoint para Prometheus"""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.post("/api/v1/workouts", status_code=status.HTTP_201_CREATED)
-def record_workout(workout_type: str = "Running"):
+def record_workout(workout_type: str = "Running", db: Session = Depends(get_db)):
     """Registra una nueva sesion de entrenamiento"""
     WORKOUT_COUNTER.labels(workout_type=workout_type).inc()
-    return {
-        "message": "Sesion de entrenamiento registrada exitosamente",
-        "workout_type": workout_type
-    }
+    db_workout = WorkoutModel(workout_type=workout_type)
+    db.add(db_workout)
+    db.commit()
+    db.refresh(db_workout)
+    return db_workout
+
+@app.get("/api/v1/workouts", status_code=status.HTTP_200_OK)
+def get_workouts(db: Session = Depends(get_db)):
+    """Retorna todas las sesiones de entrenamiento registradas"""
+    return db.query(WorkoutModel).all()
