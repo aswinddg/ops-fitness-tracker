@@ -1,13 +1,11 @@
 import time
 from fastapi import FastAPI, Response, status, Depends
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy.orm import Session
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from src.middleware import StructuredLoggingMiddleware
+from src.database import engine, get_db, Base
+from src.models import Workout as WorkoutModel
 
-from database import engine, get_db, Base
-from models import Workout as WorkoutModel
-from middleware import StructuredLoggingMiddleware
-
-# Crear tablas en PostgreSQL si no existen (antes de usar Alembic en producción)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -25,7 +23,6 @@ app = FastAPI(
     },
 )
 
-# Métricas de negocio y sistema
 WORKOUT_COUNTER = Counter(
     "fitness_workouts_total",
     "Total de sesiones de entrenamiento registradas",
@@ -47,7 +44,6 @@ async def measure_request_latency(request, call_next):
     REQUEST_LATENCY.labels(endpoint=request.url.path).observe(elapsed_time)
     return response
 
-# Registrar el middleware de logging estructurado DESPUÉS de métricas
 app.add_middleware(StructuredLoggingMiddleware)
 
 @app.get("/", status_code=status.HTTP_200_OK)
@@ -60,36 +56,26 @@ def read_root():
 
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 def health_check():
-    """Liveliness probe para orquestadores como EKS."""
     return {
         "status": "healthy",
-        "service": "ops-fitness-core",
+        "service": "ops-fitness-core"
     }
 
 @app.get("/metrics")
 def metrics():
-    """Scrape endpoint para Prometheus."""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.post("/api/v1/workouts", status_code=status.HTTP_201_CREATED)
 def record_workout(workout_type: str = "Running", db: Session = Depends(get_db)):
-    """Registra una nueva sesión de entrenamiento en PostgreSQL."""
+    """Registra una nueva sesion de entrenamiento"""
     WORKOUT_COUNTER.labels(workout_type=workout_type).inc()
-
-    new_workout = WorkoutModel(workout_type=workout_type)
-    db.add(new_workout)
+    db_workout = WorkoutModel(workout_type=workout_type)
+    db.add(db_workout)
     db.commit()
-    db.refresh(new_workout)
+    db.refresh(db_workout)
+    return db_workout
 
-    return {
-        "id": new_workout.id,
-        "message": "Sesión de entrenamiento registrada exitosamente",
-        "workout_type": new_workout.workout_type,
-        "created_at": new_workout.created_at,
-    }
-
-@app.get("/api/v1/workouts")
-def list_workouts(db: Session = Depends(get_db)):
-    """Devuelve todos los entrenamientos guardados en PostgreSQL."""
-    workouts = db.query(WorkoutModel).all()
-    return workouts
+@app.get("/api/v1/workouts", status_code=status.HTTP_200_OK)
+def get_workouts(db: Session = Depends(get_db)):
+    """Retorna todas las sesiones de entrenamiento registradas"""
+    return db.query(WorkoutModel).all()
