@@ -5,3 +5,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml 
+  - postgres/postgres-pvc.yaml      
+  - postgres/postgres-secret.yaml   
+  - postgres/postgres-deployment.yaml

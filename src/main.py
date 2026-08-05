@@ -30,9 +30,9 @@ WORKOUT_COUNTER = Counter(
 )
 
 REQUEST_LATENCY = Histogram(
-    'http_request_duration_seconds',
-    'Latencia de las peticiones HTTP en segundos',
-    ['endpoint'],
+    "http_request_duration_seconds",
+    "Latencia de las peticiones HTTP en segundos",
+    ["endpoint"],
 )
 
 @app.middleware("http")
@@ -51,7 +51,7 @@ def read_root():
     return {
         "system": "Ops Fitness Tracker",
         "status": "online",
-        "environment": "production"
+        "environment": "production",
     }
 
 @app.get("/healthz", status_code=status.HTTP_200_OK)
