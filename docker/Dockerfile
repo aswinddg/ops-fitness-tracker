@@ -48,6 +48,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder --chown=appuser:appgroup /opt/venv /opt/venv
 COPY --chown=appuser:appgroup src/ /app/src/
 
+# Copiamos Alembic, el entrypoint y el .ini ANTES de cambiar a usuario no-root
+COPY --chown=appuser:appgroup alembic/ /app/alembic/
+COPY --chown=appuser:appgroup alembic.ini /app/alembic.ini
+COPY --chown=appuser:appgroup entrypoint.sh /app/entrypoint.sh
+
+# Damos permisos de ejecución mientras seguimos como root
+RUN chmod +x /app/entrypoint.sh
+
 USER 10001:10001
 
 EXPOSE 8000
@@ -55,4 +63,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/healthz || exit 1
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# El ENTRYPOINT reemplaza al CMD; arranca migraciones y luego la API
+ENTRYPOINT ["/app/entrypoint.sh"]
