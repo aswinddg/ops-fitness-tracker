@@ -1,0 +1,4 @@
+# Asegura que los scripts de shell siempre usen LF
+*.sh text eol=lf
+# Asegura que el archivo de migraciones de alembic también sea consistente
+*.py text eol=lf
