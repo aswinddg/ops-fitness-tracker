@@ -1,0 +1,24 @@
+replicaCount: 1
+
+image:
+  repository: fitness-api
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+postgres:
+  user: "fitness_user"
+  password: "fitness_password"
+  dbName: "fitness_db"
+  storageSize: 1Gi
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
