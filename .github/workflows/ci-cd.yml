@@ -16,7 +16,7 @@ jobs:
   # ==========================================
   lint-and-test:
     name: Lint & Unit Testing
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout del código
@@ -50,7 +50,7 @@ jobs:
   security-scan:
     name: Container Security Scan (Trivy)
     needs: lint-and-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout del código
@@ -77,7 +77,7 @@ jobs:
   infra-validation:
     name: Helm Lint & Template Validation
     needs: lint-and-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout del código
@@ -112,7 +112,7 @@ jobs:
   build-and-push:
     name: Build & Push to Registry
     needs: [security-scan, infra-validation]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
