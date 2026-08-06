@@ -2,7 +2,7 @@ name: Ops Fitness Tracker CI/CD & DevSecOps Pipeline
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feature/ci-cd-pipeline" ]
   pull_request:
     branches: [ "main" ]
 
@@ -72,11 +72,46 @@ jobs:
           trivyignores: '.trivyignore'
 
   # ==========================================
-  # JOB 3: Build & Push a GHCR (Inmutabilidad)
+  # JOB 3: Validación de Infraestructura (Helm & K8s)
+  # ==========================================
+  infra-validation:
+    name: Helm Lint & Template Validation
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.12.3'
+
+      - name: Validar sintaxis del Helm Chart
+        run: |
+          helm lint ops-fitness-tracker/
+
+      - name: Generar manifiestos renderizados
+        run: |
+          helm template dev-release ops-fitness-tracker/ > rendered-manifests.yaml
+
+      - name: Escaneo de seguridad de manifiestos (Trivy Config)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          exit-code: '1' # Rompe el pipeline si hay fallos graves de seguridad en los YAML
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          input: 'rendered-manifests.yaml'
+
+  # ==========================================
+  # JOB 4: Build & Push a GHCR (Inmutabilidad)
   # ==========================================
   build-and-push:
     name: Build & Push to Registry
-    needs: security-scan
+    needs: [security-scan, infra-validation]
     runs-on: ubuntu-latest
     permissions:
       contents: read
