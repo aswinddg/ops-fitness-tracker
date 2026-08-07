@@ -1,9 +1,12 @@
 replicaCount: 1
 
 image:
-  repository: fitness-api
-  tag: "latest"
+  repository: ghcr.io/aswinddg/ops-fitness-tracker
+  tag: ci-local
   pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-pull-secret
 
 service:
   type: ClusterIP
