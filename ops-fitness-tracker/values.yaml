@@ -25,3 +25,11 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+observability:
+  alerts:
+    enabled: true
+    # Umbral de error (0.05 = 5%)
+    highErrorRateThreshold: 0.05
+    # Umbral de latencia en segundos (0.2 = 200ms)
+    highLatencyThreshold: 0.2    
