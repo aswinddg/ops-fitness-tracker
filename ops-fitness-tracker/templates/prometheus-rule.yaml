@@ -1,0 +1,31 @@
+{{- if .Values.observability.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-api-alerts
+  labels:
+    app.kubernetes.io/name: ops-fitness-tracker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: prometheus 
+spec:
+  groups:
+    - name: api-golden-signals
+      rules:
+        - alert: APIHighErrorRate
+          expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > {{ .Values.observability.alerts.highErrorRateThreshold }}
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Tasa de errores crítica en la API"
+            description: "La tasa de errores HTTP 5xx superó el umbral configurado."
+        
+        - alert: APIHighLatency
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > {{ .Values.observability.alerts.highLatencyThreshold }}
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Degradación de rendimiento en la API"
+            description: "El percentil 95 de latencia superó el límite establecido."
+{{- end }}
