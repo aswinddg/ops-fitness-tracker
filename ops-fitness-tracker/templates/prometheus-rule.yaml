@@ -2,10 +2,10 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ include "ops-fitness-tracker.fullname" . }}-alerts
+  name: {{ .Release.Name }}-api-alerts
   labels:
-    {{- include "ops-fitness-tracker.labels" . | nindent 4 }}
-    # La etiqueta 'release' debe coincidir con la que usa tu Prometheus para descubrir reglas
+    app.kubernetes.io/name: ops-fitness-tracker
+    app.kubernetes.io/instance: {{ .Release.Name }}
     release: prometheus 
 spec:
   groups:
