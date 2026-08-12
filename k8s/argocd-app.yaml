@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ops-fitness-tracker-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/aswinddg/ops-fitness-tracker.git'
+    targetRevision: feature/ci-cd-pipeline
+    path: k8s
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
