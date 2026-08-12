@@ -2,7 +2,7 @@ name: Ops Fitness Tracker CI/CD
 
 on:
   push:
-    branches: [ "main", "develop", "feature/ci-cd-pipeline" ]
+    branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
 

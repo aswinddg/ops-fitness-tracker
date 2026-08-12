@@ -39,4 +39,8 @@ resource "google_compute_instance" "test2" {
   service_account {
     scopes = ["cloud-platform"]
   }
+
+  metadata = {
+    ssh-keys = "ubuntu:${file("C:/Users/Admin_TI/.ssh/id_rsa.pub")}"
+  }
 }

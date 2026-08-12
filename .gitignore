@@ -22,3 +22,13 @@ Thumbs.db
 helm.exe
 helm.zip
 windows-amd64/
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Credenciales
+credentials.json
