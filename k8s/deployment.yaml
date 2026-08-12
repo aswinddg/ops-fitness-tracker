@@ -22,8 +22,8 @@ spec:
         fsGroup: 10001
       containers:
         - name: fitness-api
-          image: ops-fitness-api:latest # Cambiar a la etiqueta/SHA de tu registro en CD
-          imagePullPolicy: Never
+          image: docker.io/library/ops-fitness-tracker-fitness-api:latest # Cambiar a la etiqueta/SHA de tu registro en CD
+          imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
