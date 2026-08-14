@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: default
+data:
+  alert.rules: |
+    groups:
+    - name: ops-fitness-rules
+      rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.*"}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alta tasa de errores HTTP 5xx"
+          description: "La tasa de errores de la API supera el 5% durante los últimos 2 minutos."
+
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latencia P95 elevada"
+          description: "La latencia P95 de la API es mayor a 500ms de forma sostenida."
