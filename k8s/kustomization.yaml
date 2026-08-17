@@ -9,7 +9,7 @@ resources:
   - postgres/postgres-secret.yaml   
   - postgres/postgres-deployment.yaml
   - monitoring 
-  - security/postgres-external-secret.yaml
-  - security/vault-cluster-store.yaml
+  - #security/postgres-external-secret.yaml
+  - #security/vault-cluster-store.yaml
   - infrastructure/external-secrets-app.yaml
   - infrastructure/vault-app.yaml
