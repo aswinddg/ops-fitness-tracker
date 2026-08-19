@@ -13,3 +13,4 @@ resources:
   - security/vault-cluster-store.yaml
   - infrastructure/external-secrets-app.yaml
   - infrastructure/vault-app.yaml
+  - security/network-policies.yaml

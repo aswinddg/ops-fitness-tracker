@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-postgres
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres # Etiqueta de tu base de datos
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ops-fitness-api # Etiqueta de tu API
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scraping
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: ops-fitness-api
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring # Namespace donde vive Prometheus
+    ports:
+    - protocol: TCP
+      port: 8000 # O el puerto donde exponga métricas tu API
