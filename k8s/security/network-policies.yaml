@@ -9,38 +9,72 @@ spec:
   - Ingress
   - Egress
 ---
+# 1. Permitir resolución DNS (Vital para que todos los pods encuentren servicios)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-api-to-postgres
+  name: allow-dns-egress
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+# 2. Permitir que Postgres reciba tráfico SOLO de la API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-ingress
   namespace: default
 spec:
   podSelector:
     matchLabels:
-      app: postgres # Etiqueta de tu base de datos
+      app: postgres
+  policyTypes:
+  - Ingress
   ingress:
   - from:
     - podSelector:
         matchLabels:
-          app: ops-fitness-api # Etiqueta de tu API
+          app: ops-fitness-api
     ports:
     - protocol: TCP
       port: 5432
 ---
+# 3. Permitir a la API salir hacia Postgres y recibir tráfico web/métricas
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-prometheus-scraping
+  name: allow-api-traffic
   namespace: default
 spec:
   podSelector:
     matchLabels:
       app: ops-fitness-api
-  ingress:
-  - from:
-    - namespaceSelector:
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - to:
+    - podSelector:
         matchLabels:
-          kubernetes.io/metadata.name: monitoring # Namespace donde vive Prometheus
+          app: postgres
     ports:
     - protocol: TCP
-      port: 8000 # O el puerto donde exponga métricas tu API
+      port: 5432
+  ingress:
+  - from:
+    - namespaceSelector: {} # Permite tráfico de Ingress Controllers y Prometheus en otros namespaces
+    ports:
+    - protocol: TCP
+      port: 8000 # Asegúrate de que este es el puerto interno donde escucha tu API (Django)
