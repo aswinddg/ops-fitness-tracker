@@ -14,3 +14,4 @@ resources:
   - infrastructure/external-secrets-app.yaml
   - infrastructure/vault-app.yaml
   - security/network-policies.yaml
+  - infrastructure/tempo-app.yaml

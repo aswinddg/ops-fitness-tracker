@@ -26,7 +26,7 @@ spec:
           imagePullPolicy: IfNotPresent
           
           # --- INYECCIÓN DE OPENTELEMETRY ---
-          command: ["opentelemetry-instrument", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+          #command: ["opentelemetry-instrument", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
           # ----------------------------------
 
           securityContext:
