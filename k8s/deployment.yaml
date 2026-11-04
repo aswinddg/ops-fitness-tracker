@@ -22,8 +22,13 @@ spec:
         fsGroup: 10001
       containers:
         - name: fitness-api
-          image: docker.io/library/ops-fitness-tracker-fitness-api:latest # Cambiar a la etiqueta/SHA de tu registro en CD
+          image: docker.io/library/ops-fitness-tracker-fitness-api:latest # Recuerda actualizar tu imagen
           imagePullPolicy: IfNotPresent
+          
+          # --- INYECCIÓN DE OPENTELEMETRY ---
+          command: ["opentelemetry-instrument", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+          # ----------------------------------
+
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -37,7 +42,17 @@ spec:
                 name: postgres-secret
                 key: postgres-password
           - name: DATABASE_URL
-            value: "postgresql://fitness_user:$(DB_PASSWORD)@postgres-service:5432/fitness_db"        
+            value: "postgresql://fitness_user:$(DB_PASSWORD)@postgres-service:5432/fitness_db"
+            
+          # --- VARIABLES PARA CONECTAR CON TEMPO ---
+          - name: OTEL_SERVICE_NAME
+            value: "ops-fitness-api"
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://tempo.monitoring.svc.cluster.local:4317"
+          - name: OTEL_EXPORTER_OTLP_INSECURE
+            value: "true"
+          # -----------------------------------------
+          
           ports:
             - containerPort: 8000
               name: http
