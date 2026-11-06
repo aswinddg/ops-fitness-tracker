@@ -1,3 +1,4 @@
+import os
 import time
 from fastapi import FastAPI, Response, status, Depends
 from sqlalchemy.orm import Session
@@ -5,7 +6,30 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from src.middleware import StructuredLoggingMiddleware
 from src.database import engine, get_db, Base
 from src.models import Workout as WorkoutModel
+
+# --- CONFIGURACIÓN OPENTELEMETRY ---
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+# 1. Definir recurso y proveedor de trazas
+resource = Resource.create({"service.name": os.getenv("OTEL_SERVICE_NAME", "ops-fitness-api")})
+provider = TracerProvider(resource=resource)
+
+# 2. Configurar el exportador OTLP apuntando al endpoint de Tempo
+otlp_exporter = OTLPSpanExporter(
+    endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://tempo.monitoring.svc.cluster.local:4317"),
+    insecure=True
+)
+provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+trace.set_tracer_provider(provider)
+
+# 3. Instrumentar la base de datos SQLAlchemy (captura queries en Tempo)
+SQLAlchemyInstrumentor().instrument(engine=engine)
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,6 +48,7 @@ app = FastAPI(
     },
 )
 
+# 4. Instrumentar FastAPI
 FastAPIInstrumentor.instrument_app(app)
 
 WORKOUT_COUNTER = Counter(
