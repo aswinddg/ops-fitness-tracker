@@ -5,6 +5,7 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from src.middleware import StructuredLoggingMiddleware
 from src.database import engine, get_db, Base
 from src.models import Workout as WorkoutModel
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,6 +23,8 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+FastAPIInstrumentor.instrument_app(app)
 
 WORKOUT_COUNTER = Counter(
     "fitness_workouts_total",
