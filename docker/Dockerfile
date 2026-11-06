@@ -40,7 +40,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
-    && python -m pip install --no-cache-dir --upgrade pip setuptools==78.1.1 wheel==0.47.0 \
     && groupadd -g 10001 appgroup \
     && useradd -u 10001 -g appgroup -s /bin/sh -m appuser \
     && rm -rf /var/lib/apt/lists/*
@@ -48,12 +47,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder --chown=appuser:appgroup /opt/venv /opt/venv
 COPY --chown=appuser:appgroup src/ /app/src/
 
-# Copiamos Alembic, el entrypoint y el .ini ANTES de cambiar a usuario no-root
+# Copiamos Alembic, el entrypoint y el .ini
 COPY --chown=appuser:appgroup alembic/ /app/alembic/
 COPY --chown=appuser:appgroup alembic.ini /app/alembic.ini
 COPY --chown=appuser:appgroup entrypoint.sh /app/entrypoint.sh
 
-# Damos permisos de ejecución mientras seguimos como root
 RUN chmod +x /app/entrypoint.sh
 
 USER 10001:10001
@@ -63,5 +61,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/healthz || exit 1
 
-# El ENTRYPOINT reemplaza al CMD; arranca migraciones y luego la API
 ENTRYPOINT ["/app/entrypoint.sh"]
