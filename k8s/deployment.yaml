@@ -22,7 +22,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: fitness-api
-          image: docker.io/aswinddg/ops-fitness-tracker:latest
+          image: ghcr.io/aswinddg/ops-fitness-tracker:latest
           imagePullPolicy: Always
           
           # --- INYECCIÓN DE OPENTELEMETRY ---
