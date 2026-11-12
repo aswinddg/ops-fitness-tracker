@@ -43,4 +43,10 @@ resource "google_compute_instance" "test2" {
   metadata = {
     ssh-keys = "ubuntu:${file("C:/Users/Admin_TI/.ssh/id_rsa.pub")}"
   }
+
+  lifecycle {
+    ignore_changes = [
+      metadata["ssh-keys"],
+    ]
+  }
 }

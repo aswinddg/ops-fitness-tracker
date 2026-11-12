@@ -15,5 +15,5 @@ variable "zone" {
 
 variable "machine_type" {
   type        = string
-  default     = "c4-highcpu-2" 
+  default     = "n4-standard-2" 
 }
